@@ -12,47 +12,55 @@ app.get("/", function (req, res) {
 });
 
 app.post("/", function (req, res) {
-  //HTTP REQUEST USING HTTP method
-  const city = req.body.cityName;
-  const lon = req.body.Longitude; // Syntax (req.body.name)
-  const lat = req.body.Latitude;
-  const unit = "metric";
-  const apiKey = process.env.API_KEY;
-  // this url is the require call for the API
-  const url =
-    "https://api.openweathermap.org/data/2.5/forecast?lat=" +
-    lat +
-    "&lon=" +
-    lon +
-    "&units=" +
-    unit +
-    "&appid=" +
-    apiKey;
+  try {
+    if (!process.env.API_KEY) {
+      throw new Error("You forgot to set API_KEY");
+    }
 
-  // This callback function make a response call for the API
-  https.get(url, function (response) {
-    console.log(response.statusCode);
+    //HTTP REQUEST USING HTTP method
+    const city = req.body.cityName;
+    const lon = req.body.Longitude; // Syntax (req.body.name)
+    const lat = req.body.Latitude;
+    const unit = "metric";
+    const apiKey = process.env.API_KEY;
+    // this url is the require call for the API
+    const url =
+      "https://api.openweathermap.org/data/2.5/forecast?lat=" +
+      lat +
+      "&lon=" +
+      lon +
+      "&units=" +
+      unit +
+      "&appid=" +
+      apiKey;
 
-    //Generate the response from the API server to My server.
-    response.on("data", function (data) {
-      const weatherData = JSON.parse(data); //converts hexadec to JS objects.
-      const temp = weatherData.list[0].main.temp; //Fetch temp
-      const desc = weatherData.list[0].weather[0].description; //Fetch weather description.
-      const icon = weatherData.list[0].weather[0].icon; // Fetch the Icon of the weather.
-      const imageURL = "http://openweathermap.org/img/wn/" + icon + "@2x.png"; //URL of image w.r.t the key icon.
-      //Generate the response from My server to Client's server.
-      res.write(
-        "<h1>The temperature in " +
-          city +
-          " is " +
-          temp +
-          " degree Celsius.</h1>"
-      );
-      res.write("<p> The weather is currently " + desc + " </p>"); // write can be multiple in the app method.
-      res.write("<img src=" + imageURL + " >");
-      res.send(); //only one in the app method.
+    // This callback function make a response call for the API
+    https.get(url, function (response) {
+      console.log(response.statusCode);
+
+      //Generate the response from the API server to My server.
+      response.on("data", function (data) {
+        const weatherData = JSON.parse(data); //converts hexadec to JS objects.
+        const temp = weatherData.list[0].main.temp; //Fetch temp
+        const desc = weatherData.list[0].weather[0].description; //Fetch weather description.
+        const icon = weatherData.list[0].weather[0].icon; // Fetch the Icon of the weather.
+        const imageURL = "http://openweathermap.org/img/wn/" + icon + "@2x.png"; //URL of image w.r.t the key icon.
+        //Generate the response from My server to Client's server.
+        res.write(
+          "<h1>The temperature in " +
+            city +
+            " is " +
+            temp +
+            " degree Celsius.</h1>"
+        );
+        res.write("<p> The weather is currently " + desc + " </p>"); // write can be multiple in the app method.
+        res.write("<img src=" + imageURL + " >");
+        res.send(); //only one in the app method.
+      });
     });
-  });
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.listen(3000, function () {
